@@ -108,6 +108,21 @@ Frontend (index.html):
 Filtering maintenance equipment from /api/equipment removes it from the dropdown, preventing users from selecting it. Adding the check in /api/availability ensures it never appears in availability results. Adding validation in create_booking() provides a defensive check if someone tries to book it via direct API call. Together, these ensure maintenance equipment cannot be booked through any route. 
 
 
+Problem 4: 
+
+Already fixed together with problem 2. Added an event listener in end date's date picker.
+
+
+Additional Feature:
+
+Added an equipment status section on the booking page. It shows equipment ID, price per day, status, and a note like "Ready to book", "Until YYYY-MM-DD", or "Not available". The backend endpoint `/api/equipment-status` reads bookings and returns anonymous availability data for the frontend (customer name is not included in data). It only checks if equipment is available for the current day, does not show the other days it's availed.
+
+
+AI USE:
+
+I used AI to identify problems and suggest fixes. When I couldn't solve something myself, I had the AI implement it. Then I reviewed the code for cleanliness and simplicity, I was taught to question if code is too complex for my own good and sometimes AI tends to bloat the codes. I also used the IDE’s MCP tools with AI assistance for quick sanity checks on edge-cases, and I used CURL commands to test the endpoints.
+
+
 
 
 

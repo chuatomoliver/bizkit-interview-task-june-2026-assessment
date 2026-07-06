@@ -132,6 +132,41 @@ def availability():
     return jsonify(available)
 
 
+@app.route("/api/equipment-status") #ADDITIONAL FEATURE: endpoint to return all equipment status
+def equipment_status():
+    """Return all equipment with their current status and booking info."""
+    bookings = load_bookings()
+    today = date.today()
+    
+    equipment_status_list = []
+    for item in EQUIPMENT:
+        status = "available"
+        booked_until = None
+        
+        if item["status"] == "maintenance":
+            status = "maintenance"
+        else:
+            for booking in bookings:
+                if booking["equipment_id"] != item["id"]:
+                    continue
+                if booking.get("status") == "cancelled":
+                    continue
+                booking_end = parse_date(booking["to_date"])
+                if booking_end >= today:
+                    status = "booked"
+                    booked_until = booking["to_date"]
+                    break
+        
+        equipment_status_list.append({
+            "id": item["id"],
+            "daily_rate": item["daily_rate"],
+            "status": status,
+            "booked_until": booked_until
+        })
+    
+    return jsonify(equipment_status_list)
+
+
 @app.route("/api/bookings", methods=["POST"])
 def create_booking():
     data = request.get_json(force=True)
