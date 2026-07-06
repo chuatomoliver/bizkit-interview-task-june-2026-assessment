@@ -37,6 +37,22 @@
 
   <div id="message"></div>
 
+  <hr style="margin-top: 32px; margin-bottom: 32px;" /> <!-- ADDITIONAL FEATURE: equipment status dashboard/table-->
+
+  <h2>Equipment Status</h2>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+    <thead>
+      <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+        <th style="padding: 12px; text-align: left; font-weight: 600;">Equipment ID</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600;">Price/day</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600;">Status</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600;">Notes</th>
+      </tr>
+    </thead>
+    <tbody id="equipmentStatusTable">
+    </tbody>
+  </table>
+
   <script>
     let equipmentList = [];
 
@@ -56,6 +72,40 @@
     function selectedEquipment() {
       const id = Number(document.getElementById("equipment").value);
       return equipmentList.find(e => e.id === id);
+    }
+
+    async function loadEquipmentStatus() { //ADDITIONAL FEATURE: equipment status dashboard/table, function to fetch data from python's endpoint
+      const res = await fetch("/api/equipment-status");
+      const statusList = await res.json();
+      const table = document.getElementById("equipmentStatusTable");
+      table.innerHTML = "";
+      
+      statusList.forEach(item => {
+        const row = document.createElement("tr");
+        row.style.borderBottom = "1px solid #eee";
+        
+        let statusBadge = "";
+        let notes = "";
+        
+        if (item.status === "maintenance") {
+          statusBadge = '<span style="background: #fdecea; color: #c0392b; padding: 4px 8px; border-radius: 4px; font-size: 0.9rem;">Maintenance</span>';
+          notes = "Not available";
+        } else if (item.status === "booked") {
+          statusBadge = '<span style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 0.9rem;">Booked</span>';
+          notes = `Until ${item.booked_until}`;
+        } else {
+          statusBadge = '<span style="background: #e6f4ea; color: #1e7e34; padding: 4px 8px; border-radius: 4px; font-size: 0.9rem;">Available</span>';
+          notes = "Ready to book";
+        }
+        
+        row.innerHTML = `
+          <td style="padding: 12px;">#${item.id}</td>
+          <td style="padding: 12px;">PHP ${item.daily_rate.toFixed(2)}</td>
+          <td style="padding: 12px;">${statusBadge}</td>
+          <td style="padding: 12px;">${notes}</td>
+        `;
+        table.appendChild(row);
+      });
     }
 
     function dayCount(from, to) {
@@ -106,6 +156,8 @@
       if (res.ok) {
         messageEl.className = "message ok";
         messageEl.textContent = `Booked! Total PHP ${data.total.toFixed(2)}.`;
+        // FEATURE: Live update equipment status table after booking
+        loadEquipmentStatus();
       } else {
         messageEl.className = "message err";
         messageEl.textContent = data.error;
@@ -117,7 +169,13 @@
     document.getElementById("to").addEventListener("change", updateTotal); //ADDED LINE, LISTENER | PROBLEM 2_a
     document.getElementById("book").addEventListener("click", createBooking);
 
+    document.getElementById("equipment").addEventListener("change", updateTotal);
+    document.getElementById("from").addEventListener("change", updateTotal);
+    document.getElementById("to").addEventListener("change", updateTotal);
+    document.getElementById("book").addEventListener("click", createBooking);
+
     loadEquipment();
+    loadEquipmentStatus();
   </script>
 </body>
 </html>
