@@ -24,6 +24,7 @@ Fix (app.py):
 
 
 
+
 PROBLEM 2:
 
 Test Case: 
@@ -42,10 +43,7 @@ Step 6 - User selects starting date e.g. Jul 1, 2026
 Step 7 - User selects end date e.g. Jul 15, 2026
 Output 3 - Total: PHP 0.00 
 
--The event listener doesn't work on initial page load.
-
-
-
+-It goes back to the same problem, so I find that the event listener doesn't work on initial page load.
 
 Issue:
 
@@ -75,6 +73,39 @@ Backend (app.py):
 
 Adding +1 to the day calculation ensures rentals are billed inclusively (both start and end dates count as billable days). 
 
+
+PROBLEM 3: 
+
+Issue:
+
+Equipment with status "maintenance" (HD Projector) can still be booked and still shows up as available in the equipment dropdown. The rule to prevent maintenance equipment from being booked is not enforced.
+
+Fix:
+
+Backend (app.py):
+
+1. /api/equipment endpoint:
+   OLD CODE:
+   return jsonify(EQUIPMENT)
+   
+   FIXED CODE:
+   available_equipment = [item for item in EQUIPMENT if item["status"] != "maintenance"]
+   return jsonify(available_equipment)
+
+2. /api/availability endpoint:
+   ADDED CODE:
+   if item["status"] == "maintenance":
+       continue
+
+3. create_booking() function:
+   ADDED CODE:
+   if equipment["status"] == "maintenance":
+       return jsonify({"error": f"{equipment['name']} is currently under maintenance and cannot be booked"}), 400
+
+Frontend (index.html):
+   No code changes needed. API now filters out maintenance equipment, so it never appears in the dropdown.
+
+Filtering maintenance equipment from /api/equipment removes it from the dropdown, preventing users from selecting it. Adding the check in /api/availability ensures it never appears in availability results. Adding validation in create_booking() provides a defensive check if someone tries to book it via direct API call. Together, these ensure maintenance equipment cannot be booked through any route. 
 
 
 
